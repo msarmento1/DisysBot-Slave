@@ -1,0 +1,15 @@
+{
+  "name": "worker",
+  "version": "0.0.0",
+  "description": "worker",
+  "main": "app.js",
+  "author": {
+    "name": "Matheus Medeiros"
+  },
+  "dependencies": {
+    "log4js": "^2.3.4",
+    "os-utils": "0.0.14",
+    "rimraf": "~2.6.1",
+    "validate-ip-node": "^1.0.6"
+  }
+}
