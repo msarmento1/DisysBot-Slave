@@ -11,6 +11,7 @@ const factory = require( '../protocol/dwp/factory' )
 const resource = require( './resource' )
 const resource_response = require( '../protocol/dwp/pdu/resource_response' )
 const simulation_response = require( '../protocol/dwp/pdu/simulation_response' )
+const informationResponse = require( '../protocol/dwp/pdu/information_response' );
 const fs = require( 'fs' );
 const mkdirp = require( 'mkdirp' );
 const dirname = require( 'path' ).dirname;
@@ -30,6 +31,7 @@ log4js.configure( {
 // Responsible for loggin into console and log file
 const logger = log4js.getLogger();
 
+var executingSimulationInstances = [];
 var simulationPID = [];
 
 module.exports = function () {
@@ -77,7 +79,7 @@ module.exports = function () {
    } );
 }
 
-function treat( data, socket ) {
+function treat ( data, socket ) {
 
    var object;
 
@@ -94,7 +96,7 @@ function treat( data, socket ) {
 
       case factory.Id.ResourceRequest:
 
-         resource.getCpuUsage(( cpuUsage ) => {
+         resource.getCpuUsage( function ( cpuUsage ) {
             var data = { cpu: ( 1 - cpuUsage ), memory: resource.getAvailableMemory() };
 
             // Respond dispatcher
@@ -137,6 +139,16 @@ function treat( data, socket ) {
                         simulationId = simulationPID[idx].SimulationId;
                         simulationPID.splice( idx, 1 );
 
+                        for ( var executingSimulationInstance in executingSimulationInstances ) {
+
+                           if ( executingSimulationInstance.id === simulationId ) {
+                              const index = executingSimulationInstances.indexOf( executingSimulationInstance );
+                              executingSimulationInstances.splice( index );
+
+                              break;
+                           }
+                        }
+
                         break;
                      }
                   }
@@ -174,15 +186,31 @@ function treat( data, socket ) {
                      if ( err ) {
                         return logger.error( err );
                      }
+
                   } );
                } );
 
                simulationPID.push( {
                   'SimulationId': object.Data._id,
-                  'PID': child.pid,
+                  'PID': child.pid
                } );
+
+               executingSimulationInstances.push( {
+                  'id': object.Data._id,
+                  'startTime': object.Data.startTime
+               } );
+
             } );
          } );
+
+         break;
+
+      case factory.Id.InformationRequest:
+
+         logger.debug( JSON.stringify( executingSimulationInstances ) );
+
+         // Respond dispatcher
+         socket.write( informationResponse.format( { information: executingSimulationInstances } ) );
 
          break;
 
@@ -206,7 +234,7 @@ function treat( data, socket ) {
    }
 }
 
-function writeFile( path, contents, callback ) {
+function writeFile ( path, contents, callback ) {
 
    mkdirp( dirname( path ), ( err ) => {
       if ( err ) {
