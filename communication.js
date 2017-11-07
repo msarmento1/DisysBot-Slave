@@ -11,7 +11,7 @@ const factory = require( '../protocol/dwp/factory' )
 const resource = require( './resource' )
 const resource_response = require( '../protocol/dwp/pdu/resource_response' )
 const simulation_response = require( '../protocol/dwp/pdu/simulation_response' )
-const informationResponse = require( '../protocol/dwp/pdu/information_response' );
+const reportResponse = require( '../protocol/dwp/pdu/report_response' );
 const fs = require( 'fs' );
 const mkdirp = require( 'mkdirp' );
 const dirname = require( 'path' ).dirname;
@@ -34,6 +34,10 @@ const logger = log4js.getLogger();
 var executingSimulationInstances = [];
 var simulationPID = [];
 
+// Points to dispatcher socket. If socket is closed and
+// a new one is opened, it points to the newer one
+var dwSocket = new net.Socket();
+
 module.exports = function () {
 
    // Remove from local cache
@@ -43,10 +47,11 @@ module.exports = function () {
 
       logger.debug( 'Trying to connect to ' + dispatcherAddress + ':16180' );
       // TCP socket in which all the communication dispatcher-workers will be accomplished
+
       var socket = new net.Socket();
 
       socket.connect( 16180, dispatcherAddress, function () {
-         logger.debug( 'Connection established' );
+         logger.debug( 'TCP connection established' );
       } );
 
       socket.on( 'data', function ( data ) {
@@ -66,6 +71,9 @@ module.exports = function () {
       } );
 
       socket.on( 'error', function ( err ) {
+
+         socket.destroy();
+
          if ( err.code ) {
             logger.warn( err.code );
          }
@@ -76,10 +84,12 @@ module.exports = function () {
          ddp.resume();
       } );
 
+      dwSocket = socket;
+
    } );
 }
 
-function treat ( data, socket ) {
+function treat ( data ) {
 
    var object;
 
@@ -100,7 +110,7 @@ function treat ( data, socket ) {
             var data = { cpu: ( 1 - cpuUsage ), memory: resource.getAvailableMemory() };
 
             // Respond dispatcher
-            socket.write( resource_response.format( data ) );
+            dwSocket.write( resource_response.format( data ) );
          } );
 
          break;
@@ -138,16 +148,7 @@ function treat ( data, socket ) {
 
                         simulationId = simulationPID[idx].SimulationId;
                         simulationPID.splice( idx, 1 );
-
-                        for ( var executingSimulationInstance in executingSimulationInstances ) {
-
-                           if ( executingSimulationInstance.id === simulationId ) {
-                              const index = executingSimulationInstances.indexOf( executingSimulationInstance );
-                              executingSimulationInstances.splice( index );
-
-                              break;
-                           }
-                        }
+                        executingSimulationInstances.splice( idx, 1 );
 
                         break;
                      }
@@ -179,7 +180,7 @@ function treat ( data, socket ) {
                      // Treat simulator output
                   }
 
-                  socket.write( simulation_response.format( data ) );
+                  dwSocket.write( simulation_response.format( data ) );
 
                   rimraf( path, ( err ) => {
 
@@ -205,12 +206,12 @@ function treat ( data, socket ) {
 
          break;
 
-      case factory.Id.InformationRequest:
+      case factory.Id.ReportRequest:
 
          logger.debug( JSON.stringify( executingSimulationInstances ) );
 
          // Respond dispatcher
-         socket.write( informationResponse.format( { information: executingSimulationInstances } ) );
+         dwSocket.write( reportResponse.format( { report: executingSimulationInstances } ) );
 
          break;
 
