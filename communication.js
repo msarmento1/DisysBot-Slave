@@ -49,7 +49,7 @@ module.exports = function () {
       // TCP socket in which all the communication dispatcher-workers will be accomplished
 
       var socket = new net.Socket();
-      socket.setTimeout( 10000 );
+      socket.setTimeout( 60000 );
 
       socket.connect( 16180, dispatcherAddress, function () {
          logger.debug( 'TCP connection established' );
