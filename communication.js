@@ -49,6 +49,7 @@ module.exports = function () {
       // TCP socket in which all the communication dispatcher-workers will be accomplished
 
       var socket = new net.Socket();
+      socket.setTimeout( 10000 );
 
       socket.connect( 16180, dispatcherAddress, function () {
          logger.debug( 'TCP connection established' );
@@ -82,6 +83,11 @@ module.exports = function () {
       socket.on( 'close', function () {
          logger.warn( 'Dispatcher connection closed!' );
          ddp.resume();
+      } );
+
+      socket.on( 'timeout', function () {
+         logger.warn( 'Socket timed out! Closing connection' );
+         socket.destroy();
       } );
 
       dwSocket = socket;
@@ -133,25 +139,42 @@ function treat ( data ) {
                arguments.push( '-jar' );
                arguments.push( path + object.Data._simulation._binary.name );
                arguments.push( path + object.Data._simulation._document.name );
-               arguments.push( object.Data.seed + '' );
-               arguments.push( object.Data.load + '' );
-               arguments.push( object.Data.load + '' );
-               arguments.push( '1' );
+               arguments.push( object.Data.seed );
+               arguments.push( object.Data.load );
+               arguments.push( object.Data.load );
+               arguments.push( 1 );
 
                var child = execFile( 'java', arguments, ( err, stdout, stderr ) => {
 
                   var simulationId;
+
+                  var killed = false;
 
                   for ( var idx = 0; idx < simulationPID.length; ++idx ) {
 
                      if ( simulationPID[idx].PID == child.pid ) {
 
                         simulationId = simulationPID[idx].SimulationId;
+                        var killed = simulationPID[idx].killed;
                         simulationPID.splice( idx, 1 );
                         executingSimulationInstances.splice( idx, 1 );
 
                         break;
                      }
+                  }
+
+                  if ( killed ) {
+                     logger.debug( 'Process was killed by dispatcher' );
+
+                     rimraf( path, ( err ) => {
+
+                        if ( err ) {
+                           return logger.error( err );
+                        }
+
+                     } );
+
+                     return;
                   }
 
                   var data = {};
@@ -193,10 +216,9 @@ function treat ( data ) {
 
                simulationPID.push( {
                   'SimulationId': object.Data._id,
-                  'PID': child.pid
+                  'PID': child.pid,
+                  'killed': false
                } );
-
-               console.log( child.pid );
 
                executingSimulationInstances.push( {
                   'id': object.Data._id,
@@ -224,12 +246,11 @@ function treat ( data ) {
          for ( var idx = 0; idx < simulationPID.length; ++idx ) {
             if ( simulationPID[idx].SimulationId == object.SimulationId ) {
                pid = simulationPID[idx].PID;
-               logger.debug( 'Pid: ' + pid );
+               simulationPID[idx].killed = true;
             }
          }
 
          if ( pid !== undefined ) {
-            logger.debug( 'trying to kill' );
             process.kill( pid );
          }
 
