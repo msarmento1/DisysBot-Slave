@@ -11,10 +11,11 @@ const factory = require( '../protocol/dwp/factory' )
 const resource = require( './resource' )
 const resource_response = require( '../protocol/dwp/pdu/resource_response' )
 const simulation_response = require( '../protocol/dwp/pdu/simulation_response' )
+const reportResponse = require( '../protocol/dwp/pdu/report_response' );
 const fs = require( 'fs' );
 const mkdirp = require( 'mkdirp' );
 const dirname = require( 'path' ).dirname;
-const exec = require( 'child_process' ).exec;
+const execFile = require( 'child_process' ).execFile;
 const rimraf = require( 'rimraf' );
 
 log4js.configure( {
@@ -30,7 +31,12 @@ log4js.configure( {
 // Responsible for loggin into console and log file
 const logger = log4js.getLogger();
 
+var executingSimulationInstances = [];
 var simulationPID = [];
+
+// Points to dispatcher socket. If socket is closed and
+// a new one is opened, it points to the newer one
+var dwSocket = new net.Socket();
 
 module.exports = function () {
 
@@ -41,10 +47,12 @@ module.exports = function () {
 
       logger.debug( 'Trying to connect to ' + dispatcherAddress + ':16180' );
       // TCP socket in which all the communication dispatcher-workers will be accomplished
+
       var socket = new net.Socket();
+      socket.setTimeout( 10000 );
 
       socket.connect( 16180, dispatcherAddress, function () {
-         logger.debug( 'Connection established' );
+         logger.debug( 'TCP connection established' );
       } );
 
       socket.on( 'data', function ( data ) {
@@ -64,6 +72,9 @@ module.exports = function () {
       } );
 
       socket.on( 'error', function ( err ) {
+
+         socket.destroy();
+
          if ( err.code ) {
             logger.warn( err.code );
          }
@@ -74,10 +85,17 @@ module.exports = function () {
          ddp.resume();
       } );
 
+      socket.on( 'timeout', function () {
+         logger.warn( 'Socket timed out! Closing connection' );
+         socket.destroy();
+      } );
+
+      dwSocket = socket;
+
    } );
 }
 
-function treat( data, socket ) {
+function treat ( data ) {
 
    var object;
 
@@ -94,11 +112,11 @@ function treat( data, socket ) {
 
       case factory.Id.ResourceRequest:
 
-         resource.getCpuUsage(( cpuUsage ) => {
+         resource.getCpuUsage( function ( cpuUsage ) {
             var data = { cpu: ( 1 - cpuUsage ), memory: resource.getAvailableMemory() };
 
             // Respond dispatcher
-            socket.write( resource_response.format( data ) );
+            dwSocket.write( resource_response.format( data ) );
          } );
 
          break;
@@ -117,28 +135,46 @@ function treat( data, socket ) {
             writeFile( path + object.Data._simulation._document.name, documentContent, ( err ) => {
                if ( err ) throw err;
 
-               var command = 'java -jar ';
-               command += path + object.Data._simulation._binary.name + ' ';
-               command += path + object.Data._simulation._document.name + ' ';
-               command += object.Data.seed + ' ';
-               command += object.Data.load + ' ';
-               command += object.Data.load + ' 1';
+               var arguments = [];
+               arguments.push( '-jar' );
+               arguments.push( path + object.Data._simulation._binary.name );
+               arguments.push( path + object.Data._simulation._document.name );
+               arguments.push( object.Data.seed );
+               arguments.push( object.Data.load );
+               arguments.push( object.Data.load );
+               arguments.push( 1 );
 
-               command = command.replace( /\\/g, '/' );
-
-               var child = exec( command, ( err, stdout, stderr ) => {
+               var child = execFile( 'java', arguments, ( err, stdout, stderr ) => {
 
                   var simulationId;
+
+                  var killed = false;
 
                   for ( var idx = 0; idx < simulationPID.length; ++idx ) {
 
                      if ( simulationPID[idx].PID == child.pid ) {
 
                         simulationId = simulationPID[idx].SimulationId;
+                        var killed = simulationPID[idx].killed;
                         simulationPID.splice( idx, 1 );
+                        executingSimulationInstances.splice( idx, 1 );
 
                         break;
                      }
+                  }
+
+                  if ( killed ) {
+                     logger.debug( 'Process was killed by dispatcher' );
+
+                     rimraf( path, ( err ) => {
+
+                        if ( err ) {
+                           return logger.error( err );
+                        }
+
+                     } );
+
+                     return;
                   }
 
                   var data = {};
@@ -167,31 +203,50 @@ function treat( data, socket ) {
                      // Treat simulator output
                   }
 
-                  socket.write( simulation_response.format( data ) );
+                  dwSocket.write( simulation_response.format( data ) );
 
                   rimraf( path, ( err ) => {
 
                      if ( err ) {
                         return logger.error( err );
                      }
+
                   } );
                } );
 
                simulationPID.push( {
                   'SimulationId': object.Data._id,
                   'PID': child.pid,
+                  'killed': false
                } );
+
+               executingSimulationInstances.push( {
+                  'id': object.Data._id,
+                  'startTime': object.Data.startTime
+               } );
+
             } );
          } );
 
          break;
 
+      case factory.Id.ReportRequest:
+
+         logger.debug( JSON.stringify( executingSimulationInstances ) );
+
+         // Respond dispatcher
+         dwSocket.write( reportResponse.format( { report: executingSimulationInstances } ) );
+
+         break;
+
       case factory.Id.SimulationTerminateRequest:
+
          var pid;
 
          for ( var idx = 0; idx < simulationPID.length; ++idx ) {
             if ( simulationPID[idx].SimulationId == object.SimulationId ) {
                pid = simulationPID[idx].PID;
+               simulationPID[idx].killed = true;
             }
          }
 
@@ -206,7 +261,7 @@ function treat( data, socket ) {
    }
 }
 
-function writeFile( path, contents, callback ) {
+function writeFile ( path, contents, callback ) {
 
    mkdirp( dirname( path ), ( err ) => {
       if ( err ) {
