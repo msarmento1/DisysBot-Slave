@@ -15,7 +15,7 @@ const reportResponse = require( '../protocol/dwp/pdu/report_response' );
 const fs = require( 'fs' );
 const mkdirp = require( 'mkdirp' );
 const dirname = require( 'path' ).dirname;
-const exec = require( 'child_process' ).exec;
+const execFile = require( 'child_process' ).execFile;
 const rimraf = require( 'rimraf' );
 
 log4js.configure( {
@@ -129,16 +129,16 @@ function treat ( data ) {
             writeFile( path + object.Data._simulation._document.name, documentContent, ( err ) => {
                if ( err ) throw err;
 
-               var command = 'java -jar ';
-               command += path + object.Data._simulation._binary.name + ' ';
-               command += path + object.Data._simulation._document.name + ' ';
-               command += object.Data.seed + ' ';
-               command += object.Data.load + ' ';
-               command += object.Data.load + ' 1';
+               var arguments = [];
+               arguments.push( '-jar' );
+               arguments.push( path + object.Data._simulation._binary.name );
+               arguments.push( path + object.Data._simulation._document.name );
+               arguments.push( object.Data.seed + '' );
+               arguments.push( object.Data.load + '' );
+               arguments.push( object.Data.load + '' );
+               arguments.push( '1' );
 
-               command = command.replace( /\\/g, '/' );
-
-               var child = exec( command, ( err, stdout, stderr ) => {
+               var child = execFile( 'java', arguments, ( err, stdout, stderr ) => {
 
                   var simulationId;
 
@@ -196,6 +196,8 @@ function treat ( data ) {
                   'PID': child.pid
                } );
 
+               console.log( child.pid );
+
                executingSimulationInstances.push( {
                   'id': object.Data._id,
                   'startTime': object.Data.startTime
@@ -216,15 +218,18 @@ function treat ( data ) {
          break;
 
       case factory.Id.SimulationTerminateRequest:
+
          var pid;
 
          for ( var idx = 0; idx < simulationPID.length; ++idx ) {
             if ( simulationPID[idx].SimulationId == object.SimulationId ) {
                pid = simulationPID[idx].PID;
+               logger.debug( 'Pid: ' + pid );
             }
          }
 
          if ( pid !== undefined ) {
+            logger.debug( 'trying to kill' );
             process.kill( pid );
          }
 
