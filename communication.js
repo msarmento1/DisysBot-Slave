@@ -155,7 +155,7 @@ function treat ( data ) {
                      if ( simulationPID[idx].PID == child.pid ) {
 
                         simulationId = simulationPID[idx].SimulationId;
-                        var killed = simulationPID[idx].killed;
+                        killed = simulationPID[idx].killed;
                         simulationPID.splice( idx, 1 );
                         executingSimulationInstances.splice( idx, 1 );
 
