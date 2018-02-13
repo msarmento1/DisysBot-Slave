@@ -16,6 +16,8 @@ const fs = require( 'fs' );
 const mkdirp = require( 'mkdirp' );
 const dirname = require( 'path' ).dirname;
 const stateManager = require( './state_manager' );
+const State = require( '../protocol/dwp/common' ).WorkerState;
+const config = require( './configuration' ).getConfiguration();
 
 const rimraf = require( 'rimraf' );
 const processManager = require( './process_manager' );
@@ -96,7 +98,7 @@ module.exports = function () {
 
    } );
 
-   stateManager.on( 'pause', function () {
+   stateManager.event.on( 'pause', function () {
       executingSimulationInstances = [];
    } );
 }
@@ -117,19 +119,16 @@ function treat( data ) {
    switch ( id ) {
 
       case factory.Id.ResourceRequest:
-
          resource.getCpuUsage( function ( cpuUsage ) {
             var data = { cpu: ( 1 - cpuUsage ), memory: resource.getAvailableMemory() };
 
             // Respond dispatcher
             dwSocket.write( resource_response.format( data ) );
          } );
-
          break;
 
       case factory.Id.SimulationRequest:
-
-         if ( stateManager.getCurrentState() === stateManager.State.Paused ) {
+         if ( stateManager.getCurrentState() === State.Paused ) {
             break;
          }
 
@@ -219,22 +218,15 @@ function treat( data ) {
          break;
 
       case factory.Id.ReportRequest:
-
-         // Respond dispatcher
-         dwSocket.write( reportResponse.format( { report: executingSimulationInstances } ) );
-
+         dwSocket.write( reportResponse.format( { report: executingSimulationInstances, state: stateManager.getCurrentState(), alias: config.alias } ) );
          break;
 
       case factory.Id.SimulationTerminateRequest:
-
          processManager.kill( object.SimulationId );
-
          break;
 
       case factory.Id.ControlCommand:
-
          stateManager.handleCommand( object.command );
-
          break;
 
       default:

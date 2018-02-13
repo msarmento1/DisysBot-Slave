@@ -6,29 +6,25 @@
 
 const Command = require( '../protocol/dwp/pdu/control_command' ).Command;
 const processManager = require( './process_manager' );
+const EventEmitter = require( 'events' );
+const WorkerState = require( '../protocol/dwp/common' ).WorkerState;
 
-const State = {
-   Executing = 0,
-   Paused = 1,
-};
-
-module.exports.State = State;
-
-var state = State.Executing;
+var state = WorkerState.Executing;
 
 var event = new EventEmitter();
 
-module.exports.handleCommand = function ( command ) {
+function handleCommand( command ) {
 
    switch ( command ) {
 
       case Command.Pause:
-
-         if ( state === State.Paused ) {
+         if ( state === WorkerState.Paused ) {
             return;
          }
 
-         state = State.Paused;
+         console.log( 'Pausing' );
+
+         state = WorkerState.Paused;
 
          processManager.killAll();
 
@@ -37,19 +33,21 @@ module.exports.handleCommand = function ( command ) {
          break;
 
       case Command.Resume:
-
-         if ( state === State.Executing ) {
+         if ( state === WorkerState.Executing ) {
             return;
          }
 
-         state = State.Executing;
+         console.log( 'Resuming' );
+
+         state = WorkerState.Executing;
 
          break;
 
       case Command.Stop:
 
-         processManager.killAll();
+         console.log( 'Stopping' );
 
+         processManager.killAll();
          process.exit()
 
       default:
@@ -57,6 +55,12 @@ module.exports.handleCommand = function ( command ) {
    }
 }
 
-module.exports.getCurrentState = function () {
+function getCurrentState() {
    return state;
+}
+
+module.exports = {
+   event,
+   handleCommand,
+   getCurrentState
 }

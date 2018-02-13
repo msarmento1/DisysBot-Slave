@@ -55,6 +55,8 @@ module.exports.kill = function ( id ) {
 module.exports.killAll = function () {
 
    for ( var idx = 0; idx < processes.length; ++idx ) {
+      processes[idx].killed = true;
       process.kill( processes[idx].pid );
+      console.log( 'Killing ' + processes[idx].pid );
    }
 }
