@@ -15,8 +15,12 @@ const reportResponse = require( '../protocol/dwp/pdu/report_response' );
 const fs = require( 'fs' );
 const mkdirp = require( 'mkdirp' );
 const dirname = require( 'path' ).dirname;
-const execFile = require( 'child_process' ).execFile;
+const stateManager = require( './state_manager' );
+const State = require( '../protocol/dwp/common' ).WorkerState;
+const config = require( './configuration' ).getConfiguration();
+
 const rimraf = require( 'rimraf' );
+const processManager = require( './process_manager' );
 
 log4js.configure( {
    appenders: {
@@ -93,9 +97,13 @@ module.exports = function () {
       dwSocket = socket;
 
    } );
+
+   stateManager.event.on( 'pause', function () {
+      executingSimulationInstances = [];
+   } );
 }
 
-function treat ( data ) {
+function treat( data ) {
 
    var object;
 
@@ -111,17 +119,18 @@ function treat ( data ) {
    switch ( id ) {
 
       case factory.Id.ResourceRequest:
-
          resource.getCpuUsage( function ( cpuUsage ) {
             var data = { cpu: ( 1 - cpuUsage ), memory: resource.getAvailableMemory() };
 
             // Respond dispatcher
             dwSocket.write( resource_response.format( data ) );
          } );
-
          break;
 
       case factory.Id.SimulationRequest:
+         if ( stateManager.getCurrentState() === State.Paused ) {
+            break;
+         }
 
          logger.debug( 'New simulation received!' );
 
@@ -144,42 +153,33 @@ function treat ( data ) {
                arguments.push( object.Data.load );
                arguments.push( 1 );
 
-               var child = execFile( 'java', arguments, ( err, stdout, stderr ) => {
+               processManager.exec( 'java', arguments, object.Data._id, function ( id, killed, err, stdout, stderr ) {
 
-                  var simulationId;
+                  rimraf( path, function ( err ) {
 
-                  var killed = false;
+                     if ( err ) {
+                        logger.error( err );
+                     }
 
-                  for ( var idx = 0; idx < simulationPID.length; ++idx ) {
+                  } );
 
-                     if ( simulationPID[idx].PID == child.pid ) {
+                  for ( var idx = 0; idx < executingSimulationInstances.length; ++idx ) {
 
-                        simulationId = simulationPID[idx].SimulationId;
-                        killed = simulationPID[idx].killed;
-                        simulationPID.splice( idx, 1 );
+                     if ( executingSimulationInstances[idx].id === id ) {
                         executingSimulationInstances.splice( idx, 1 );
-
                         break;
                      }
                   }
 
                   if ( killed ) {
-                     logger.debug( 'Process was killed by dispatcher' );
-
-                     rimraf( path, ( err ) => {
-
-                        if ( err ) {
-                           return logger.error( err );
-                        }
-
-                     } );
-
                      return;
                   }
 
                   var data = {};
 
-                  data.SimulationId = simulationId;
+                  data.SimulationId = id;
+
+                  logger.debug( id );
 
                   if ( err ) {
                      logger.error( 'Simulation has finished with error.\n' + err );
@@ -205,19 +205,6 @@ function treat ( data ) {
 
                   dwSocket.write( simulation_response.format( data ) );
 
-                  rimraf( path, ( err ) => {
-
-                     if ( err ) {
-                        return logger.error( err );
-                     }
-
-                  } );
-               } );
-
-               simulationPID.push( {
-                  'SimulationId': object.Data._id,
-                  'PID': child.pid,
-                  'killed': false
                } );
 
                executingSimulationInstances.push( {
@@ -231,37 +218,23 @@ function treat ( data ) {
          break;
 
       case factory.Id.ReportRequest:
-
-         logger.debug( JSON.stringify( executingSimulationInstances ) );
-
-         // Respond dispatcher
-         dwSocket.write( reportResponse.format( { report: executingSimulationInstances } ) );
-
+         dwSocket.write( reportResponse.format( { report: executingSimulationInstances, state: stateManager.getCurrentState(), alias: config.alias } ) );
          break;
 
       case factory.Id.SimulationTerminateRequest:
+         processManager.kill( object.SimulationId );
+         break;
 
-         var pid;
-
-         for ( var idx = 0; idx < simulationPID.length; ++idx ) {
-            if ( simulationPID[idx].SimulationId == object.SimulationId ) {
-               pid = simulationPID[idx].PID;
-               simulationPID[idx].killed = true;
-            }
-         }
-
-         if ( pid !== undefined ) {
-            process.kill( pid );
-         }
-
+      case factory.Id.ControlCommand:
+         stateManager.handleCommand( object.command );
          break;
 
       default:
-         return logger.error( 'Invalid Id!' );
+         return logger.error( 'Invalid Id!' + id );
    }
 }
 
-function writeFile ( path, contents, callback ) {
+function writeFile( path, contents, callback ) {
 
    mkdirp( dirname( path ), ( err ) => {
       if ( err ) {

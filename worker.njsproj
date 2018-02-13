@@ -38,7 +38,13 @@
     <Compile Include="communication.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="process_manager.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="resource.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="state_manager.js">
       <SubType>Code</SubType>
     </Compile>
     <Content Include="config\config.json">
