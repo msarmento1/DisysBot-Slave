@@ -38,13 +38,31 @@
     <Compile Include="communication.js">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="process_manager.js">
+    <Compile Include="dwp_handler\handler\get_report_handler.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dwp_handler\handler\perform_command_handler.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dwp_handler\handler\perform_task_handler.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dwp_handler\handler\terminate_task_handler.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dwp_handler\manager.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="manager\task_manager.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="manager\temp_manager.js">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="resource.js">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="state_manager.js">
+    <Compile Include="manager\state_manager.js">
       <SubType>Code</SubType>
     </Compile>
     <Content Include="config\config.json">
@@ -54,6 +72,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="config\" />
+    <Folder Include="dwp_handler\" />
+    <Folder Include="dwp_handler\handler\" />
+    <Folder Include="manager\" />
   </ItemGroup>
   <!-- Do not delete the following Import Project.  While this appears to do nothing it is a marker for setting TypeScript properties before our import that depends on them. -->
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="False" />
