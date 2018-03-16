@@ -6,7 +6,7 @@ See also:
 - [Protocol](https://github.com/MatheusMS01/protocol)
 
 ## Introduction
-Worker application on a distributed system managed by [dispatcher](https://github.com/MatheusMS01/web_dispatcher). This is a lightweight where its main purpose is to process tasks sent by dispatcher.
+Worker application on a distributed system managed by [dispatcher](https://github.com/MatheusMS01/web_dispatcher). This is a lightweight  service where its main purpose is to process tasks sent by dispatcher.
 
 ## Getting started
 
