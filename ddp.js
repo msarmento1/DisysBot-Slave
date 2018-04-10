@@ -9,24 +9,13 @@
 const dgram = require('dgram');
 const EventEmitter = require('events');
 const configuration = require('./configuration').getConfiguration();
-const log4js = require('log4js');
 
-log4js.configure({
-  appenders: {
-    out: { type: 'stdout' },
-    app: { type: 'file', filename: 'log/ddp.log' }
-  },
-  categories: {
-    default: { appenders: ['out', 'app'], level: 'debug' }
-  }
-});
+// Responsible for loggin into console and log file
+const logger = require('./logger');
 
 var event = new EventEmitter();
 
 var receivedResponse = false;
-
-// Responsible for loggin into console and log file
-const logger = log4js.getLogger();
 
 const socket = dgram.createSocket('udp4');
 

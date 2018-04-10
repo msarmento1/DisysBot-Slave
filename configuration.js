@@ -4,37 +4,38 @@
 //
 ////////////////////////////////////////////////
 
-var fs = require( 'fs' );
-var validateIP = require( 'validate-ip-node' );
+const fs = require('fs');
+const validateIP = require('validate-ip-node');
+const logger = require('./logger');
 
-var configuration = {};
+let configuration = {};
 
 load();
 
-module.exports.getConfiguration = function () {
+module.exports.getConfiguration = () => {
 
-   if ( Object.keys( configuration ).length === 0 && configuration.constructor === Object ) {
-      load();
-   }
+  if (Object.keys( configuration ).length === 0 && configuration.constructor === Object) {
+    load();
+  }
 
-   return configuration;
+  return configuration;
 }
 
 function load() {
 
-   try {
-      configuration = JSON.parse( fs.readFileSync( __dirname + '/config/config.json', 'utf8' ).replace( /^\uFEFF/, '' ) );
-   } catch ( err ) {
+  try {
+    configuration = JSON.parse(fs.readFileSync(`${__dirname}/config/config.json`, 'utf8' ).replace( /^\uFEFF/, ''));
+  } catch (err) {
+    logger.error("Error while loading configuration files, treating everything as default");
+  }
 
-   }
-
-   treatDefaultValues();
+  treatDefaultValues();
 }
 
 function treatDefaultValues() {
 
-   if ( !validateIP( configuration.DispatcherAddress ) ) {
-      configuration.DispatcherAddress = undefined;
-   }
+  if (!validateIP(configuration.DispatcherAddress)) {
+    configuration.DispatcherAddress = undefined;
+  }
 
 }
