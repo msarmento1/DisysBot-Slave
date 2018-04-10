@@ -35,7 +35,53 @@ function load() {
 function treatDefaultValues() {
 
   if (!validateIP(configuration.DispatcherAddress)) {
+    logger.warn("Dispatcher IP Address is invalid or undefined. Default: undefined");
     configuration.DispatcherAddress = undefined;
   }
 
+  if (configuration.languages === undefined) {
+    logger.warn("Supported languages are not defined. Default: Allow all working languagues")
+    configuration.languages = {
+      list: [],
+      allow_others: true
+    };
+    configuration.languages.allow_others = true;
+  } else {
+    // if allow_others is undefined or not boolean
+    if (configuration.languages.allow_others === undefined
+        || typeof(configuration.languages.allow_others) !== "boolean") {
+      logger.warn("Permission to run other languages is undefined or not a boolean. Default: true");
+      configuration.languages.allow_others = true;
+    }
+    // if list is undefined, it is empty
+    if (configuration.languages.list === undefined) {
+      logger.warn("List of supported languages is undefined. Default: []");
+      configuration.languages.list = [];
+    }
+    else {
+      configuration.languages.list = validateLanguages(configuration.languages.list);
+    }
+  }
+
+}
+
+function validateLanguages(languagesList) {
+  // if it is not array, treat as invalid
+  if (!Array.isArray(languagesList)) {
+    logger.warn("Defined list of supported languages is not an array. Default: []");
+    return [];
+  }
+
+  let newList = [];
+  const length = languagesList.length;
+  for (let i = 0; i < length; i++) {
+    if (typeof languagesList[i] === 'string') {
+      newList.push(languagesList[i]);
+    }
+    else {
+      logger.warn(`Element '${languagesList[i]}' (index ${i}) from the supported languages is not a string. Currently being ignored`);
+    }
+  }
+
+  return newList;
 }
