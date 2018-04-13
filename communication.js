@@ -15,6 +15,9 @@ module.exports.event = event
 // DWP Handler Related
 const dwpManager = require('./dwp_handler/manager')
 
+// Require to init and check existing languages
+const languageManager = require('./manager/language_manager')
+
 // DDP Related
 const ddp = require('./ddp')
 
@@ -31,6 +34,7 @@ module.exports.execute = function () {
 
     socket = net.createConnection({ host: address, port: 16180 }, function () {
       logger.debug('TCP connection established');
+      languageManager.init(socket);
     });
 
     socket.on('data', function (data) {

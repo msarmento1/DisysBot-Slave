@@ -1,6 +1,14 @@
+const logger = require('../logger');
 const config = require('../configuration').getConfiguration();
+const getLanguageCommand = require('../../protocol/dwp/pdu/get_language_command')
 
-module.exports.init = () => {
+module.exports.init = (socket) => {
+  var packet = {
+    names: config.languages.list
+  }
+
+  logger.debug('Requesting commands for all languages defined in the config file');
+  socket.write(getLanguageCommand.format(packet));
 }
 
 /**

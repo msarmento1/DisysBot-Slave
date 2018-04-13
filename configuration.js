@@ -83,8 +83,10 @@ function validateLanguages(languages) {
   for (let i = 0; i < length; ++i) {
     if (typeof languages[i] === 'string') {
       // Creating an object so that we can later store new fields such as version and test command
+      // allow can be false when the test to run the language fails
       newList.push({
-        name: languages[i]
+        name: languages[i],
+        allow: true
       });
     }
     else {
