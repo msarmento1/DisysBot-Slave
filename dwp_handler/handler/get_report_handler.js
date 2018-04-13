@@ -5,6 +5,7 @@ const config = require('../../configuration').getConfiguration();
 const resource = require('./../../resource')
 const stateManager = require('./../../manager/state_manager')
 const taskManager = require('./../../manager/task_manager')
+const languageManager = require('./../../manager/language_manager')
 
 const report = require('../../../protocol/dwp/pdu/report')
 const Flags = require('../../../protocol/dwp/common').Flags
@@ -37,6 +38,12 @@ module.exports.execute = function (pdu, socket) {
     if (pdu.flags & Flags.ALIAS) {
       packet = extend(packet, {
         alias: config.alias
+      })
+    }
+
+    if (pdu.flags & Flags.SUPPORTED_LANGUAGES) {
+      packet = extend(packet, {
+        languages: languageManager.getSupportedLanguages()
       })
     }
 

@@ -21,6 +21,10 @@ module.exports.getConfiguration = () => {
   return configuration;
 }
 
+module.exports.setLanguageVersions = (versions) => {
+  configuration.languages.versions = versions;
+}
+
 function load() {
 
   try {
@@ -40,9 +44,10 @@ function treatDefaultValues() {
   }
 
   if (configuration.languages === undefined) {
-    logger.warn("Supported languages are not defined. Default: Allow all working languagues")
+    logger.warn("Supported languages are not defined. Default: Allow all working languages")
     configuration.languages = {
       list: [],
+      objectList: [],
       allow_others: true
     };
     configuration.languages.allow_others = true;
@@ -57,29 +62,33 @@ function treatDefaultValues() {
     if (configuration.languages.list === undefined) {
       logger.warn("List of supported languages is undefined. Default: []");
       configuration.languages.list = [];
+      configuration.languages.objectList = [];
     }
     else {
-      configuration.languages.list = validateLanguages(configuration.languages.list);
+      configuration.languages.objectList = validateLanguages(configuration.languages.list);
     }
   }
 
 }
 
-function validateLanguages(languagesList) {
+function validateLanguages(languages) {
   // if it is not array, treat as invalid
-  if (!Array.isArray(languagesList)) {
+  if (!Array.isArray(languages)) {
     logger.warn("Defined list of supported languages is not an array. Default: []");
     return [];
   }
 
   let newList = [];
-  const length = languagesList.length;
-  for (let i = 0; i < length; i++) {
-    if (typeof languagesList[i] === 'string') {
-      newList.push(languagesList[i]);
+  const length = languages.length;
+  for (let i = 0; i < length; ++i) {
+    if (typeof languages[i] === 'string') {
+      // Creating an object so that we can later store new fields such as version and test command
+      newList.push({
+        name: languages[i]
+      });
     }
     else {
-      logger.warn(`Element '${languagesList[i]}' (index ${i}) from the supported languages is not a string. Currently being ignored`);
+      logger.warn(`Element '${languages[i]}' (index ${i}) from the supported languages is not a string. Currently being ignored`);
     }
   }
 
