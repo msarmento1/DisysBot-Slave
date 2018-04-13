@@ -47,7 +47,7 @@ function treatDefaultValues() {
     logger.warn("Supported languages are not defined. Default: Allow all working languages")
     configuration.languages = {
       list: [],
-      objectList: [],
+      map: {},
       allow_others: true
     };
     configuration.languages.allow_others = true;
@@ -62,10 +62,11 @@ function treatDefaultValues() {
     if (configuration.languages.list === undefined) {
       logger.warn("List of supported languages is undefined. Default: []");
       configuration.languages.list = [];
-      configuration.languages.objectList = [];
+      configuration.languages.map = {};
     }
     else {
-      configuration.languages.objectList = validateLanguages(configuration.languages.list);
+      configuration.languages.list = validateLanguages(configuration.languages.list);
+      configuration.languages.map = {};
     }
   }
 
@@ -82,12 +83,7 @@ function validateLanguages(languages) {
   const length = languages.length;
   for (let i = 0; i < length; ++i) {
     if (typeof languages[i] === 'string') {
-      // Creating an object so that we can later store new fields such as version and test command
-      // allow can be false when the test to run the language fails
-      newList.push({
-        name: languages[i],
-        allow: true
-      });
+      newList.push(languages[i]);
     }
     else {
       logger.warn(`Element '${languages[i]}' (index ${i}) from the supported languages is not a string. Currently being ignored`);

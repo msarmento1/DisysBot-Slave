@@ -11,6 +11,7 @@ const getReportHandler = require('./handler/get_report_handler')
 const performTaskHandler = require('./handler/perform_task_handler')
 const terminateTaskHandler = require('./handler/terminate_task_handler')
 const performCommandHandler = require('./handler/perform_command_handler')
+const languageManager = require('../manager/language_manager')
 
 module.exports.treat = function (packet, socket) {
   var pdu
@@ -41,6 +42,10 @@ function chooseHandler(pdu, socket) {
 
     case Id.PERFORM_COMMAND:
       performCommandHandler.execute(pdu, socket)
+      break
+
+    case Id.LANGUAGE_COMMAND:
+      languageManager.testLanguages(pdu)
       break
   }
 }

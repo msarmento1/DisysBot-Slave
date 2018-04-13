@@ -2,6 +2,6 @@
   "alias": "ARCTURUS01",
   "languages": {
     "allow_others": false,
-    "list": ["python"]
+    "list": ["java", "python", "c++"]
   }
 }
