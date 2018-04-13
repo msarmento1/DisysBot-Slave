@@ -1,7 +1,8 @@
-const { exec } = require('child_process');
 const logger = require('../logger');
 const config = require('../configuration').getConfiguration();
+const { execAsync } = require('../resource');
 const getLanguageCommand = require('../../protocol/dwp/pdu/get_language_command')
+const languageSupport = require('../../protocol/dwp/pdu/language_support')
 
 module.exports.init = (socket) => {
   var packet = {
@@ -12,48 +13,71 @@ module.exports.init = (socket) => {
   socket.write(getLanguageCommand.format(packet));
 }
 
-module.exports.testLanguages = (pdu) => {
+module.exports.testLanguages = async (pdu) => {
   const languages = pdu.languages;
 
   logger.debug('Executing tests for each language listed on config file');
   for (let i in languages) {
-    executeLanguageTest(languages[i]);
+    const languageName = languages[i].name;
+    config.languages.map[languageName] = await executeLanguageTest(languages[i]);
+    
+    if (config.languages.map[languageName].works) {
+      logger.debug(`Test of language '${languageName}' succeeded`);
+    } else {
+      logger.error(`Test of language '${languageName}' failed`);
+    }
   }
+}
+
+module.exports.getLanguageSupport = async (pdu, socket) => {
+  let packet = {
+    name: pdu.name,
+    allow: false,
+    version: undefined
+  };
+
+  let map = config.languages.map;
+
+  if (map[pdu.name] !== undefined) {
+    packet.version = map[pdu.name].version
+    packet.allow = map[pdu.name].works
+  }
+  else if (config.languages.allow_others) {
+    try {
+      const testedLanguage = await executeLanguageTest(pdu);
+      map[pdu.name] = testedLanguage;
+      packet.version = testedLanguage.version;
+      packet.allow = testedLanguage.works;
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+  
+  socket.write(languageSupport.format(packet));
 }
 
 /**
  * Executes the command defined in language and check whether it succeeds.
  */
-const executeLanguageTest = (language) => {
+const executeLanguageTest = async (language) => {
+  let languageObject = {
+    command: language.command,
+    works: false,
+    version: undefined
+  }
   // If dispatcher did not return a command to this language
   if (language.command === undefined) {
-    logger.error(`Test of language '${language.name}' failed`);
-    config.languages.map[language.name] = {
-      command: language.command,
-      works: false,
-      version: undefined
-    }
-    return;
+    return languageObject;
   }
 
-  exec(language.command, (err, stdout, stderr) => {
-    if (err) {
-      logger.error(`Test of language '${language.name}' failed`);
-      config.languages.map[language.name] = {
-        command: language.command,
-        works: false,
-        version: undefined
-      }
-      return;
-    }
+  try {
+    const { stdout, stderr } = await execAsync(language.command, { timeout: 5000 });
+    languageObject.works = true;
+    languageObject.version = stderr.length > stdout.length ? stderr : stdout;
+  } catch (err) {
+  }
 
-    logger.debug(`Test of language '${language.name}' succeeded`);
-    config.languages.map[language.name] = {
-      command: language.command,
-      works: true,
-      version: stderr
-    }
-  });
+  return languageObject;
 }
 
 /**

@@ -44,6 +44,10 @@ function chooseHandler(pdu, socket) {
       performCommandHandler.execute(pdu, socket)
       break
 
+    case Id.GET_LANGUAGE_SUPPORT:
+      languageManager.getLanguageSupport(pdu, socket)
+      break
+
     case Id.LANGUAGE_COMMAND:
       languageManager.testLanguages(pdu)
       break
