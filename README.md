@@ -2,11 +2,11 @@
 
 See also: 
 
-- [Dispatcher](https://github.com/MatheusMS01/web_dispatcher)
-- [Protocol](https://github.com/MatheusMS01/protocol)
+- [Dispatcher](https://github.com/comnetunb/web_dispatcher)
+- [Protocol](https://github.com/comnetunb/protocol)
 
 ## Introduction
-Worker application on a distributed system managed by [dispatcher](https://github.com/MatheusMS01/web_dispatcher). This is a lightweight  service where its main purpose is to process tasks sent by dispatcher.
+Worker application on a distributed system managed by [dispatcher](https://github.com/comnetunb/web_dispatcher). This is a lightweight  service where its main purpose is to process tasks sent by dispatcher.
 
 ## Getting started
 
@@ -14,7 +14,7 @@ Worker application on a distributed system managed by [dispatcher](https://githu
 
 #### Prereqs:
 - [NodeJS v8.10.0 LTS or better](https://nodejs.org/en/)
-- [Protocol](https://github.com/MatheusMS01/protocol). Extract the protocol directory and put it on the same level as the worker directory (It *must* be named as protocol)
+- [Protocol](https://github.com/comnetunb/protocol). Extract the protocol directory and put it on the same level as the worker directory (It *must* be named as protocol)
 
 After downloading and extracting the source to a directory, on a terminal, run the following command:
 
