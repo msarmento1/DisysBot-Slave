@@ -1,4 +1,5 @@
 ﻿// General
+const parseDataUrl = require('parse-data-url');
 const rimraf = require('rimraf')
 const logger = require('../../logger');
 
@@ -16,58 +17,66 @@ module.exports.execute = function (pdu, socket) {
     return
   }
 
-  logger.debug('New simulation received!');
+  logger.debug('New task received!');
 
-  Promise.all(pdu.files.map(function (file) {
-    if (file.content.type === 'Buffer') {
-      return tempManager.create(pdu.taskId, file.name, Buffer(file.content))
-    } else {
-      return tempManager.create(pdu.taskId, file.name, file.content)
-    }
-  })).then(function () {
-    socket.write(performTaskResponse.format({ taskId: pdu.taskId, code: performTaskResponse.ReturnCode.EXECUTING }))
+  try {
+    Promise
+      .all(pdu.files.map(file => {
+        const parsed = parseDataUrl(file.dataURL)
+        return tempManager.create(pdu.task.id, file.name, parsed.toBuffer())
+      }))
+      .then(() => {
+        socket.write(performTaskResponse.format({
+          task: pdu.task,
+          code: performTaskResponse.ReturnCode.EXECUTING
+        }))
 
-    const options = {
-      cwd: tempManager.getCWD(pdu.taskId)
-    }
-
-    taskManager.exec(pdu.exec.file, pdu.exec.arguments, pdu.taskId, options, function (id, killed, err, stdout, stderr) {
-      if (killed) {
-        return
-      }
-
-      var packet = {
-        task: {
-          id: undefined
+        const options = {
+          cwd: tempManager.getCWD(pdu.task.id)
         }
-      }
 
-      packet.task.id = pdu.taskId
+        taskManager.exec(pdu.commandLine, pdu.task.id, options, (id, killed, err, stdout, stderr) => {
+          if (killed) {
+            return
+          }
 
-      if (err) {
-        logger.error('Simulation has finished with error.\n' + err);
+          var packet = {
+            task: {
+              id: undefined
+            }
+          }
 
-        packet.code = taskResult.ReturnCode.ERROR
-        packet.output = err
-      }
+          packet.task = pdu.task
 
-      if (stderr) {
-        logger.error('Simulation has finished with error.\n' + stderr);
+          if (err) {
+            logger.error('Simulation has finished with error.\n' + err);
 
-        packet.code = taskResult.ReturnCode.ERROR
-        packet.output = stderr
-      }
+            packet.code = taskResult.ReturnCode.ERROR
+            packet.output = err
+          }
 
-      if (stdout) {
-        logger.info('Simulation has finished with success');
+          if (stderr) {
+            logger.error('Simulation has finished with error.\n' + stderr);
 
-        packet.code = taskResult.ReturnCode.SUCCESS
-        packet.output = stdout
-      }
+            packet.code = taskResult.ReturnCode.ERROR
+            packet.output = stderr
+          }
 
-      socket.write(taskResult.format( packet ))
-    })
-  }).catch(function (e) {
-    logger.err(e)
-  })
+          if (stdout) {
+            logger.info('Simulation has finished with success');
+
+            packet.code = taskResult.ReturnCode.SUCCESS
+            packet.output = stdout
+          }
+
+          socket.write(taskResult.format(packet))
+        })
+      })
+      .catch(function (e) {
+        logger.error(e)
+      })
+  }
+  catch (e) {
+    console.log(e)
+  }
 }

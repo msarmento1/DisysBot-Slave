@@ -4,17 +4,16 @@
 //
 ////////////////////////////////////////////////
 
-const execFile = require('child_process').execFile
+const { exec } = require('child_process')
 
 var tasks = []
 
-module.exports.exec = function (file, args, id, options, callback) {
-  const childProcess = execFile(file, args, options, function (err, stdout, stderr) {
+module.exports.exec = (commandLine, id, options, callback) => {
+  const childProcess = exec(commandLine, options, (err, stdout, stderr) => {
 
     var killed = false
 
     for (var idx = 0; idx < tasks.length; ++idx) {
-
       if (tasks[idx].pid == childProcess.pid) {
         killed = tasks[idx].killed
         tasks.splice(idx, 1)
@@ -32,7 +31,7 @@ module.exports.exec = function (file, args, id, options, callback) {
   })
 }
 
-module.exports.getTaskIds = function () {
+module.exports.getTaskIds = () => {
 
   var taskIds = []
 
@@ -46,7 +45,7 @@ module.exports.getTaskIds = function () {
 /**
 * @param id process second identification (this is not the PID)
 */
-module.exports.kill = function (id) {
+module.exports.kill = (id) => {
   var pid
 
   for (var idx = 0; idx < tasks.length; ++idx) {
@@ -61,7 +60,7 @@ module.exports.kill = function (id) {
   }
 }
 
-module.exports.killAll = function () {
+module.exports.killAll = () => {
   for (var idx = 0; idx < tasks.length; ++idx) {
     tasks[idx].killed = true
     process.kill(tasks[idx].pid)
