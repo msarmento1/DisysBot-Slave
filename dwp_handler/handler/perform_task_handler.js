@@ -36,6 +36,8 @@ module.exports.execute = function (pdu, socket) {
         }
 
         taskManager.exec(pdu.commandLine, pdu.task.id, options, (id, killed, err, stdout, stderr) => {
+          tempManager.delete(id)
+
           if (killed) {
             return
           }
