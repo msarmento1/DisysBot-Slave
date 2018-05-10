@@ -1,68 +1,66 @@
-﻿////////////////////////////////////////////////
-//
-// Copyright (c) 2017 Matheus Medeiros Sarmento
-//
-////////////////////////////////////////////////
+﻿/*
+ *
+ * Copyright (c) 2017 Matheus Medeiros Sarmento
+ *
+ */
 
-const { exec } = require('child_process')
+const { exec } = require('child_process');
 
-var tasks = []
+const tasks = [];
 
 module.exports.exec = (commandLine, id, options, callback) => {
   const childProcess = exec(commandLine, options, (err, stdout, stderr) => {
+    let killed = false;
 
-    var killed = false
-
-    for (var idx = 0; idx < tasks.length; ++idx) {
-      if (tasks[idx].pid == childProcess.pid) {
-        killed = tasks[idx].killed
-        tasks.splice(idx, 1)
-        break
+    for (let idx = 0; idx < tasks.length; idx += 1) {
+      if (tasks[idx].pid === childProcess.pid) {
+        killed = tasks[idx].killed; // eslint-disable-line
+        tasks.splice(idx, 1);
+        break;
       }
     }
 
-    callback(id, killed, err, stdout, stderr)
-  })
+    callback(id, killed, err, stdout, stderr);
+  });
 
   tasks.push({
-    id: id,
+    id,
     pid: childProcess.pid,
     killed: false
-  })
-}
+  });
+};
 
 module.exports.getTaskIds = () => {
+  const taskIds = [];
 
-  var taskIds = []
+  tasks.forEach((task) => {
+    taskIds.push(task.id);
+  });
 
-  tasks.forEach(function (task) {
-    taskIds.push(task.id)
-  })
-
-  return taskIds
-}
+  return taskIds;
+};
 
 /**
 * @param id process second identification (this is not the PID)
 */
 module.exports.kill = (id) => {
-  var pid
+  let pid;
 
-  for (var idx = 0; idx < tasks.length; ++idx) {
+  for (let idx = 0; idx < tasks.length; idx += 1) {
     if (tasks[idx].id === id) {
-      pid = tasks[idx].pid
-      tasks[idx].killed = true
+      pid = tasks[idx].pid; // eslint-disable-line
+      tasks[idx].killed = true;
     }
   }
 
   if (pid !== undefined) {
-    process.kill(pid)
+    process.kill(pid);
   }
-}
+};
 
 module.exports.killAll = () => {
-  for (var idx = 0; idx < tasks.length; ++idx) {
-    tasks[idx].killed = true
-    process.kill(tasks[idx].pid)
+  for (let idx = 0; idx < tasks.length; idx += 1) {
+    tasks[idx].killed = true;
+    process.kill(tasks[idx].pid);
   }
-}
+};
