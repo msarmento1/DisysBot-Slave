@@ -1,8 +1,14 @@
 ﻿const fs = require('fs');
 const path = require('path');
 const mkdirp = require('mkdirp');
-
+const rimraf = require('rimraf');
 const tmpDir = __dirname + '/../tmp/';
+
+const getCWD = (id) => {
+  return tmpDir + '/' + id + '/'
+}
+
+module.exports.getCWD = getCWD
 
 module.exports.clean = function () {
   //fs.readdir(tmpDir, function (err, files) {
@@ -21,16 +27,17 @@ module.exports.clean = function () {
 }
 
 module.exports.create = function (id, fileName, data) {
-  return new Promise(function (resolve, reject) {
-    mkdirp(tmpDir + '/' + id, function (err) {
-      if (err) {
-        reject(err)
+  return new Promise((resolve, reject) => {
+    mkdirp(getCWD(id), (e) => {
+      if (e) {
+        reject(e)
       }
 
-      fs.writeFile(tmpDir + '/' + id + '/' + fileName, data, function (err) {
-        if (err) {
-          reject(err);
-        } else {
+      fs.writeFile(getCWD(id) + fileName, data, (e) => {
+        if (e) {
+          reject(e);
+        }
+        else {
           resolve();
         }
       });
@@ -38,6 +45,7 @@ module.exports.create = function (id, fileName, data) {
   });
 }
 
-module.exports.getCWD = function (id) {
-  return tmpDir + '/' + id + '/'
+module.exports.delete = (id) => {
+  rimraf(getCWD(id), (e) => { });
 }
+
