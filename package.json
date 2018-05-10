@@ -6,6 +6,10 @@
   "author": {
     "name": "Matheus Medeiros"
   },
+  "scripts": {
+    "lint": "esw *.js manager dwp_handler --color",
+    "test": "npm run lint"
+  },
   "dependencies": {
     "log4js": "^2.3.4",
     "mkdirp": "^0.5.1",

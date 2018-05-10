@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const mkdirp = require('mkdirp');
 const rimraf = require('rimraf');
 

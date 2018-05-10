@@ -1,3 +1,2 @@
-﻿module.exports.execute = function (pdu, worker) {
-
-}
+module.exports.execute = (pdu, worker) => { // eslint-disable-line
+};
