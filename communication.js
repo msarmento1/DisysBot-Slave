@@ -6,18 +6,7 @@
 
 // General Requirements
 const net = require('net');
-
-const log4js = require('log4js');
-log4js.configure({
-  appenders: {
-    out: { type: 'stdout' },
-    app: { type: 'file', filename: 'log/communication.log' }
-  },
-  categories: {
-    default: { appenders: ['out', 'app'], level: 'debug' }
-  }
-});
-const logger = log4js.getLogger();
+const logger = require('./logger');
 
 const EventEmitter = require('events')
 var event = new EventEmitter()
@@ -25,6 +14,9 @@ module.exports.event = event
 
 // DWP Handler Related
 const dwpManager = require('./dwp_handler/manager')
+
+// Require to init and check existing languages
+const languageManager = require('./manager/language_manager')
 
 // DDP Related
 const ddp = require('./ddp')
@@ -42,6 +34,7 @@ module.exports.execute = function () {
 
     socket = net.createConnection({ host: address, port: 16180 }, function () {
       logger.debug('TCP connection established');
+      languageManager.init(socket);
     });
 
     socket.on('data', function (data) {
