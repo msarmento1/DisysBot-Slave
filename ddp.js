@@ -1,8 +1,8 @@
-﻿////////////////////////////////////////////////
-//
-// Copyright (c) 2017 Matheus Medeiros Sarmento
-//
-////////////////////////////////////////////////
+/*
+ *
+ * Copyright (c) 2017 Matheus Medeiros Sarmento
+ *
+ */
 
 // Dispatcher Discovery Protocol
 
@@ -13,28 +13,25 @@ const configuration = require('./configuration').getConfiguration();
 // Responsible for loggin into console and log file
 const logger = require('./logger');
 
-var event = new EventEmitter();
+const event = new EventEmitter();
 
-var receivedResponse = false;
+let receivedResponse = false;
 
 const socket = dgram.createSocket('udp4');
 
 function execute() {
-
   socket.on('listening', () => {
-
     socket.setBroadcast(true);
 
     if (configuration.dispatcherAddress !== undefined) {
-      logger.debug('Dispatcher address is configured: ' + configuration.dispatcherAddress);
+      logger.debug(`Dispatcher address is configured: ${configuration.dispatcherAddress}`);
       return event.emit('address', configuration.dispatcherAddress);
     }
 
-    resume();
+    return resume();
   });
 
   socket.on('message', (message, rinfo) => {
-
     // @TODO: Validate message
 
     if (!receivedResponse) {
@@ -50,35 +47,32 @@ function execute() {
 }
 
 function resume() {
-
   logger.debug('Trying to discover dispatcher via UDP broadcast');
 
   send();
 
-  var tries = 0;
+  let tries = 0;
 
-  var intervalId = setInterval(() => {
-
+  const intervalId = setInterval(() => {
     if (receivedResponse) {
       receivedResponse = false;
       clearInterval(intervalId);
-      return;
+      return undefined;
     }
 
     if (tries >= 10 && (configuration.DispatcherAddress !== undefined)) {
-      logger.debug(tries + ' tries to connect to dispatcher via UDP broadcast. Trying again with address configured');
+      logger.debug(`${tries} tries to connect to dispatcher via UDP broadcast. Trying again with address configured`);
       tries = 0;
       clearInterval(intervalId);
       return event.emit('dispatcher_address', configuration.DispatcherAddress);
     }
 
-    ++tries;
-    send();
+    tries += 1;
+    return send();
   }, 1000);
 }
 
 function send() {
-
   const message = 'NewWorker';
 
   // Send message and wait for dispatcher's response
@@ -89,4 +83,4 @@ module.exports = {
   execute,
   resume,
   event
-}
+};

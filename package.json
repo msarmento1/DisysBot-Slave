@@ -6,11 +6,22 @@
   "author": {
     "name": "Matheus Medeiros"
   },
+  "scripts": {
+    "lint": "esw *.js manager dwp_handler --color",
+    "test": "npm run lint"
+  },
   "dependencies": {
     "log4js": "^2.3.4",
+    "mkdirp": "^0.5.1",
     "os-utils": "0.0.14",
     "parse-data-url": "^0.2.0",
     "rimraf": "~2.6.1",
     "validate-ip-node": "^1.0.6"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-import": "^2.11.0",
+    "eslint-watch": "^3.1.4"
   }
 }

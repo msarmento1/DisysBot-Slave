@@ -1,23 +1,21 @@
-﻿////////////////////////////////////////////////
-//
-// Copyright (c) 2017 Matheus Medeiros Sarmento
-//
-////////////////////////////////////////////////
+/*
+ *
+ * Copyright (c) 2017 Matheus Medeiros Sarmento
+ *
+ */
 
-const Command = require('../../protocol/dwp/pdu/perform_command').Command
 const processManager = require('./task_manager');
-const EventEmitter = require('events');
-const WorkerState = require('../../protocol/dwp/common').WorkerState;
+const { Command } = require('../../protocol/dwp/pdu/perform_command');
+const { WorkerState } = require('../../protocol/dwp/common');
 
 const State = {
   EXECUTING: WorkerState.EXECUTING,
   PAUSED: WorkerState.PAUSED
-}
+};
 
-var state = WorkerState.EXECUTING;
+let state = WorkerState.EXECUTING;
 
 function handleCommand(command) {
-
   switch (command) {
     case Command.PAUSE:
       if (state === WorkerState.Paused) {
@@ -38,10 +36,10 @@ function handleCommand(command) {
 
     case Command.STOP:
       processManager.killAll();
-      process.exit()
+      process.exit();
+      break;
 
     default:
-      return;
   }
 }
 
@@ -52,5 +50,5 @@ function getCurrentState() {
 module.exports = {
   handleCommand,
   getCurrentState,
-  State: State
-}
+  State
+};
