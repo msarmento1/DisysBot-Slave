@@ -7,8 +7,8 @@ const stateManager = require('./../../manager/state_manager');
 const taskManager = require('./../../manager/task_manager');
 const languageManager = require('./../../manager/language_manager');
 
-const report = require('../../../protocol/dwp/pdu/report');
-const { Flags } = require('../../../protocol/dwp/common');
+const report = protocolRequire('dwp/pdu/report');
+const { Flags } = protocolRequire('dwp/common');
 
 module.exports.execute = (pdu, socket) => {
   resource.getCpuUsage((cpuUsage) => {

@@ -22,7 +22,7 @@ const languageManager = require('./manager/language_manager');
 const ddp = require('./ddp');
 
 // Protocol Related
-const factory = require('../protocol/dwp/factory');
+const factory = protocolRequire('dwp/factory');
 
 let socket = new net.Socket();
 

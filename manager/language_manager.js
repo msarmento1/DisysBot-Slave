@@ -1,8 +1,8 @@
 const logger = require('../logger');
 const config = require('../configuration').getConfiguration();
 const { execAsync } = require('../resource');
-const getLanguageCommand = require('../../protocol/dwp/pdu/get_language_command');
-const languageSupport = require('../../protocol/dwp/pdu/language_support');
+const getLanguageCommand = protocolRequire('dwp/pdu/get_language_command');
+const languageSupport = protocolRequire('dwp/pdu/language_support');
 
 module.exports.init = (socket) => {
   const packet = {

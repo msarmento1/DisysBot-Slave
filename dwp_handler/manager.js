@@ -2,8 +2,8 @@
 const logger = require('../logger');
 
 // Protocol Related
-const factory = require('../../protocol/dwp/factory');
-const { Id } = require('../../protocol/dwp/factory');
+const factory = protocolRequire('dwp/factory');
+const { Id } = protocolRequire('dwp/factory');
 
 // DWP Handler Related
 const getReportHandler = require('./handler/get_report_handler');

@@ -8,8 +8,8 @@ const stateManager = require('./../../manager/state_manager');
 const tempManager = require('./../../manager/temp_manager');
 
 // Protocol Related
-const performTaskResponse = require('./../../../protocol/dwp/pdu/perform_task_response');
-const taskResult = require('./../../../protocol/dwp/pdu/task_result');
+const performTaskResponse = protocolRequire('dwp/pdu/perform_task_response');
+const taskResult = protocolRequire('dwp/pdu/task_result');
 
 module.exports.execute = (pdu, socket) => {
   if (stateManager.getCurrentState() === stateManager.State.PAUSED) {

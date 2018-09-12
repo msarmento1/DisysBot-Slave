@@ -5,8 +5,8 @@
  */
 
 const processManager = require('./task_manager');
-const { Command } = require('../../protocol/dwp/pdu/perform_command');
-const { WorkerState } = require('../../protocol/dwp/common');
+const { Command } = protocolRequire('dwp/pdu/perform_command');
+const { WorkerState } = protocolRequire('dwp/common');
 
 const State = {
   EXECUTING: WorkerState.EXECUTING,

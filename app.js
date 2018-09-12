@@ -1,8 +1,6 @@
-/*
- *
- * Copyright (c) 2017 Matheus Medeiros Sarmento
- *
- */
+global.protocolRequire = (name) => {
+   return require(`${__dirname}/DisysBot-Protocol/${name}`);
+};
 
 const ddp = require('./ddp');
 const communication = require('./communication');
