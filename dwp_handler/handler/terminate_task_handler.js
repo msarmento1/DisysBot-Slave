@@ -1,2 +1,2 @@
-module.exports.execute = (pdu, worker) => { // eslint-disable-line
+module.exports.execute = (pdu, slave) => { // eslint-disable-line
 };

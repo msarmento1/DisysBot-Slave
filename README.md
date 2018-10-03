@@ -1,12 +1,12 @@
-# Worker
+# Slave
 
 See also: 
 
-- [Dispatcher](https://github.com/comnetunb/web_dispatcher)
-- [Protocol](https://github.com/comnetunb/protocol)
+- [Master](https://github.com/comnetunb/DisysBot-Master)
+- [Protocol](https://github.com/comnetunb/DisysBot-Protocol)
 
 ## Introduction
-Worker application on a distributed system managed by [dispatcher](https://github.com/comnetunb/web_dispatcher). This is a lightweight  service where its main purpose is to process tasks sent by dispatcher.
+Save application on a distributed system managed by [Master](https://github.com/comnetunb/DisysBot-Master)). This is a lightweight  service where its main purpose is to process tasks sent by dispatcher.
 
 ## Getting started
 
@@ -14,7 +14,7 @@ Worker application on a distributed system managed by [dispatcher](https://githu
 
 #### Prereqs:
 - [NodeJS v8.10.0 LTS or better](https://nodejs.org/en/)
-- [Protocol](https://github.com/comnetunb/protocol). Extract the protocol directory and put it on the same level as the worker directory (It *must* be named as protocol)
+- [Protocol](https://github.com/comnetunb/protocol). Extract the protocol directory and put it on the same level as the slave directory
 
 After downloading and extracting the source to a directory, on a terminal, run the following command:
 
@@ -23,13 +23,13 @@ After downloading and extracting the source to a directory, on a terminal, run t
 And that's it!
 
 ## Running
-After installing the worker, you can run it by executing the following command on terminal(pwd on root of the project):
+After installing the slave, you can run it by executing the following command on terminal(pwd on root of the project):
 
     node app.js
 
 ## Configuration file
-You can tweak the worker configuration on */worker/config/config.json*
+You can tweak the slave configuration on `<path to source>/config/config.json`
 
 ### Properties
-- alias: defines an alias for the worker machine
-- dispatcherAddress: sets the IP of a reachable dispatcher. If this property is set, the application will try to connect to it directly. If this property is not set, the connection mechanism will be the automatic discovery, that only works on a dispatcher configured on a local network shared by the worker aplication.
+- alias: defines an alias for the slave machine
+- dispatcherAddress: sets the IP of a reachable dispatcher. If this property is set, the application will try to connect to it directly. If this property is not set, the connection mechanism will be the automatic discovery, that only works on a dispatcher configured on a local network shared by the slave aplication.
