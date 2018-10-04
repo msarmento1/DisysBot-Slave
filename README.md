@@ -6,7 +6,7 @@ See also:
 - [Protocol](https://github.com/comnetunb/DisysBot-Protocol)
 
 ## Introduction
-Save application on a distributed system managed by [Master](https://github.com/comnetunb/DisysBot-Master)). This is a lightweight  service where its main purpose is to process tasks sent by dispatcher.
+Save application on a distributed system managed by [Master](https://github.com/comnetunb/DisysBot-Master)). This is a lightweight  service where its main purpose is to process tasks sent by master.
 
 ## Getting started
 
@@ -32,4 +32,4 @@ You can tweak the slave configuration on `<path to source>/config/config.json`
 
 ### Properties
 - alias: defines an alias for the slave machine
-- dispatcherAddress: sets the IP of a reachable dispatcher. If this property is set, the application will try to connect to it directly. If this property is not set, the connection mechanism will be the automatic discovery, that only works on a dispatcher configured on a local network shared by the slave aplication.
+- dispatcherAddress: sets the IP of a reachable master. If this property is set, the application will try to connect to it directly. If this property is not set, the connection mechanism will be the automatic discovery, that only works on a master configured on a local network shared by the slave aplication.

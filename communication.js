@@ -66,7 +66,7 @@ module.exports.execute = () => {
     });
 
     socket.on('close', () => {
-      logger.warn('Dispatcher connection closed!');
+      logger.warn('Master connection closed!');
       ddp.resume();
     });
 
