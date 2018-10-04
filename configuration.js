@@ -36,7 +36,7 @@ function load() {
 
 function treatDefaultValues() {
   if (!validateIP(configuration.DispatcherAddress)) {
-    logger.warn('Dispatcher IP Address is invalid or undefined. Default: undefined');
+    logger.warn('Master IP Address is invalid or undefined. Default: undefined');
     configuration.DispatcherAddress = undefined;
   }
 
@@ -51,7 +51,7 @@ function treatDefaultValues() {
   } else {
     // if allow_others is undefined or not boolean
     if (configuration.languages.allow_others === undefined
-        || typeof (configuration.languages.allow_others) !== 'boolean') {
+      || typeof (configuration.languages.allow_others) !== 'boolean') {
       logger.warn('Permission to run other languages is undefined or not a boolean. Default: true');
       configuration.languages.allow_others = true;
     }

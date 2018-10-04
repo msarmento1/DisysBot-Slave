@@ -4,7 +4,7 @@
  *
  */
 
-// Dispatcher Discovery Protocol
+// Master Discovery Protocol
 
 const dgram = require('dgram');
 const EventEmitter = require('events');
@@ -24,7 +24,7 @@ function execute() {
     socket.setBroadcast(true);
 
     if (configuration.dispatcherAddress !== undefined) {
-      logger.debug(`Dispatcher address is configured: ${configuration.dispatcherAddress}`);
+      logger.debug(`Master address is configured: ${configuration.dispatcherAddress}`);
       return event.emit('address', configuration.dispatcherAddress);
     }
 
@@ -36,7 +36,7 @@ function execute() {
 
     if (!receivedResponse) {
       // Avoid duplicates
-      logger.debug('Received response from dispatcher');
+      logger.debug('Received response from master');
       event.emit('address', rinfo.address);
       receivedResponse = true;
     }
@@ -47,7 +47,7 @@ function execute() {
 }
 
 function resume() {
-  logger.debug('Trying to discover dispatcher via UDP broadcast');
+  logger.debug('Trying to discover master via UDP broadcast');
 
   send();
 
@@ -61,7 +61,7 @@ function resume() {
     }
 
     if (tries >= 10 && (configuration.DispatcherAddress !== undefined)) {
-      logger.debug(`${tries} tries to connect to dispatcher via UDP broadcast. Trying again with address configured`);
+      logger.debug(`${tries} tries to connect to master via UDP broadcast. Trying again with address configured`);
       tries = 0;
       clearInterval(intervalId);
       return event.emit('dispatcher_address', configuration.DispatcherAddress);
@@ -73,9 +73,9 @@ function resume() {
 }
 
 function send() {
-  const message = 'NewWorker';
+  const message = 'NewSlave';
 
-  // Send message and wait for dispatcher's response
+  // Send message and wait for master's response
   socket.send(message, 0, message.length, 16180, '255.255.255.255');
 }
 

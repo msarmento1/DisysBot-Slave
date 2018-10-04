@@ -6,32 +6,32 @@
 
 const processManager = require('./task_manager');
 const { Command } = protocolRequire('dwp/pdu/perform_command');
-const { WorkerState } = protocolRequire('dwp/common');
+const { SlaveState } = protocolRequire('dwp/common');
 
 const State = {
-  EXECUTING: WorkerState.EXECUTING,
-  PAUSED: WorkerState.PAUSED
+  EXECUTING: SlaveState.EXECUTING,
+  PAUSED: SlaveState.PAUSED
 };
 
-let state = WorkerState.EXECUTING;
+let state = SlaveState.EXECUTING;
 
 function handleCommand(command) {
   switch (command) {
     case Command.PAUSE:
-      if (state === WorkerState.Paused) {
+      if (state === SlaveState.Paused) {
         return;
       }
 
-      state = WorkerState.PAUSED;
+      state = SlaveState.PAUSED;
       processManager.killAll();
       break;
 
     case Command.RESUME:
-      if (state === WorkerState.Executing) {
+      if (state === SlaveState.Executing) {
         return;
       }
 
-      state = WorkerState.EXECUTING;
+      state = SlaveState.EXECUTING;
       break;
 
     case Command.STOP:

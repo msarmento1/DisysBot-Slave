@@ -1,6 +1,7 @@
 const logger = require('../logger');
 const config = require('../configuration').getConfiguration();
 const { execAsync } = require('../resource');
+
 const getLanguageCommand = protocolRequire('dwp/pdu/get_language_command');
 const languageSupport = protocolRequire('dwp/pdu/language_support');
 
@@ -39,7 +40,7 @@ const executeLanguageTest = async (language) => {
     works: false,
     version: undefined
   };
-  // If dispatcher did not return a command to this language
+  // If master did not return a command to this language
   if (language.command === undefined) {
     return languageObject;
   }
@@ -81,7 +82,7 @@ module.exports.getLanguageSupport = async (pdu, socket) => {
 };
 
 /**
- * Returns languages supported by the worker.
+ * Returns languages supported by the slave.
  * @return {Array} - Objects representing languages with the properties
  * 'name' and also possibly 'command' and 'version', if they are defined on runtime.
  */
